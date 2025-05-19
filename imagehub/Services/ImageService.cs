@@ -14,8 +14,6 @@ public class ImageService(ILogger<ImageService> logger, MyContext db)
 {
     public async Task<Guid> UploadImageAsync(IFormFile file, string folder)
     {
-        // TODO: Check if not exists in database
-
         var id = Guid.NewGuid();
         var ex = Path.GetExtension(file.FileName);
         var path = $"images/{folder}/{id}{ex}";
@@ -38,6 +36,13 @@ public class ImageService(ILogger<ImageService> logger, MyContext db)
         var exists = await db.Images.FirstOrDefaultAsync(x => x.Name == fileNameWithoutExtension);
         if (exists != null)
         {
+            // remove previous image if exists on disk
+            if (File.Exists(exists.Path))
+            {
+                File.Delete(exists.Path);
+                logger.LogInformation("Image {Id} deleted from disk", exists.Id);
+            }
+
             logger.LogWarning("Image {Id} already exists in database", id);
             exists.Path = path;
             exists.Folder = folder;
