@@ -46,18 +46,6 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     Console.WriteLine("📏Applying migrations");
-    // check if database exists
-    var dbPath = Path.Combine(builder.Environment.ContentRootPath, "images", "app.db");
-    if (!File.Exists(dbPath))
-    {
-        Console.WriteLine("❗️Database doesn't exist, creating it");
-        Directory.CreateDirectory(Path.GetDirectoryName(dbPath));
-        File.Create(dbPath).Close();
-    }
-    else
-    {
-        Console.WriteLine("✅Database exists");
-    }
     var db = scope.ServiceProvider.GetRequiredService<MyContext>();
     db.Database.Migrate();
     Console.WriteLine("✅Database migrations applied");
