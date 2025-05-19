@@ -83,6 +83,11 @@ public class ImageService(ILogger<ImageService> logger, MyContext db)
         if (imageDb == null)
             throw new FileNotFoundException($"Image {id} not found in database");
 
+        if (extension == ".svg")
+        {
+            return await File.ReadAllBytesAsync(imageDb.Path);
+        }
+        
         using var image = await Image.LoadAsync(imageDb.Path);
 
         // Pokud je zadána předdefinovaná velikost
