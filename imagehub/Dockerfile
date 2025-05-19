@@ -22,7 +22,7 @@ WORKDIR /app
 
 COPY --from=publish /app/publish .
 RUN chown -R $APP_UID:0 /app && \
-    chmod -R 775 /app
+    chmod -R 777 /app
 
 USER $APP_UID
 ENTRYPOINT ["dotnet", "imagehub.dll"]
