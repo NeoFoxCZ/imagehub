@@ -78,6 +78,8 @@ public class UploadController(
                 ".jpeg" => "image/jpeg",
                 ".png" => "image/png",
                 ".webp" => "image/webp",
+                ".svg" => "image/svg+xml",
+                ".avif" => "image/avif",
                 _ => "application/octet-stream"
             };
             // Cache the image in memory
