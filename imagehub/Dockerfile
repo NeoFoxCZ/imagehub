@@ -19,10 +19,5 @@ RUN dotnet publish "imagehub.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:
 
 FROM base AS final
 WORKDIR /app
-
 COPY --from=publish /app/publish .
-RUN chown -R $APP_UID:0 /app && \
-    chmod -R 777 /app
-
-USER $APP_UID
 ENTRYPOINT ["dotnet", "imagehub.dll"]
