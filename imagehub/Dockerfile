@@ -19,5 +19,12 @@ RUN dotnet publish "imagehub.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:
 
 FROM base AS final
 WORKDIR /app
+
+# Nejdřív vytvoříme složku a nastavíme oprávnění jako root
+RUN mkdir -p /app/images
 COPY --from=publish /app/publish .
+RUN chown -R $APP_UID:0 /app && \
+    chmod -R 775 /app
+
+USER $APP_UID
 ENTRYPOINT ["dotnet", "imagehub.dll"]
