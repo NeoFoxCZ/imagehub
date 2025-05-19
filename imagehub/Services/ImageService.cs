@@ -1,5 +1,6 @@
 #region
 
+using imagehub.Models;
 using imagehub.tables;
 using Microsoft.EntityFrameworkCore;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -130,4 +131,55 @@ public class ImageService(ILogger<ImageService> logger, MyContext db)
 
         return ms.ToArray();
     }
+    
+    /// <summary>
+    ///     Method will return structured all images in folder and folders
+    /// </summary>
+    public async Task<List<StructureModel>> GetImagesStructureAsync(string? folder)
+    {
+        var folderPath = Path.Combine("images", folder ?? "");
+        var structure = new List<StructureModel>();
+
+        // 1. Přidej složky jako StructureModelFolder
+        if (Directory.Exists(folderPath))
+        {
+            var directories = Directory.GetDirectories(folderPath);
+            foreach (var dir in directories)
+            {
+                var dirName = Path.GetFileName(dir);
+                //var children = await GetImagesStructureAsync(
+                //    string.IsNullOrEmpty(folder) ? dirName : Path.Combine(folder!, dirName)
+                //);
+
+                structure.Add(new StructureModel
+                {
+                    Name = dirName,
+                    Type = "folder",
+                    //Children = children
+                });
+            }
+        }
+
+        // 2. Načti obrázky z DB
+        var images = await db.Images
+            .Where(x => x.Folder == folder)
+            .ToListAsync();
+
+        foreach (var image in images)
+        {
+            structure.Add(new StructureModel
+            {
+                Id = image.Id,
+                Name = image.Name,
+                Type= "image",
+                Path = image.Path,
+                Alt = image.Alt,
+                Extension = image.Extension,
+                //Size = image.Size
+            });
+        }
+
+        return structure;
+    }
+    
 }

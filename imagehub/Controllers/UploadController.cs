@@ -129,4 +129,12 @@ public class UploadController(
             return StatusCode(500, "Internal server error");
         }
     }
+    
+    [HttpGet("structure")]
+    public async Task<IActionResult> GetImageStructure(string? folder)
+    {
+        // Get the image structure from the database
+        var imageStructure = await imageService.GetImagesStructureAsync(folder);
+        return Ok(imageStructure);
+    }
 }
