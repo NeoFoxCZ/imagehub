@@ -36,6 +36,29 @@ public class UploadController(
         }
     }
 
+    [HttpPost("multiple")]
+    public async Task<IActionResult> UploadImages(IFormFileCollection files, string folder = "product")
+    {
+        if (files == null || files.Count == 0) return BadRequest("No files uploaded.");
+
+        try
+        {
+            var imageUrls = new List<string>();
+            foreach (var file in files)
+            {
+                var imageUrl = await imageService.UploadImageAsync(file, folder);
+                imageUrls.Add(imageUrl.ToString());
+            }
+
+            return Ok(new { Urls = imageUrls });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error uploading images");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+    
     [HttpGet("{id}")]
     public async Task<IActionResult> GetImage(string id, string? size, int? width, int? height,
         ResizeMode resizeMode = ResizeMode.Max, string folder = "product")

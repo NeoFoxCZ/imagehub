@@ -52,13 +52,10 @@ using (var scope = app.Services.CreateScope())
 }
 
 Console.WriteLine("🚀Starting application");
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-}
+
+app.UseDeveloperExceptionPage();
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.UseHttpsRedirection();
 
