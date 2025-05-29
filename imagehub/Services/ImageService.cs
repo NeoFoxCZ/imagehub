@@ -88,6 +88,18 @@ public class ImageService(ILogger<ImageService> logger, MyContext db)
             return await File.ReadAllBytesAsync(imageDb.Path);
         }
         
+        if (extension == ".avif")
+        {
+            // AVIF is not supported by ImageSharp, so we return the original file
+            return await File.ReadAllBytesAsync(imageDb.Path);
+        }
+        
+        if (extension == ".gif")
+        {
+            // GIF is not supported by ImageSharp for resizing, so we return the original file
+            return await File.ReadAllBytesAsync(imageDb.Path);
+        }
+        
         using var image = await Image.LoadAsync(imageDb.Path);
 
         // Pokud je zadána předdefinovaná velikost
@@ -111,7 +123,7 @@ public class ImageService(ILogger<ImageService> logger, MyContext db)
             };
             image.Mutate(x => x.Resize(resizeOptions));
         }
-
+        
         using var ms = new MemoryStream();
         switch (extension)
         {

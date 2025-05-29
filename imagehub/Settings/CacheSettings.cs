@@ -9,7 +9,7 @@ public class CacheSettings
     ///     Duration in seconds for how long the cache should be valid.
     /// </summary>
     public int CacheDuration { get; set; } = 60;
-    
+
     /// <summary>
     ///     Maximum size of the cache in MB.
     /// </summary>
@@ -24,6 +24,11 @@ public class CacheSettings
     ///     Cache type to be used in the application. <see cref="CacheType" />
     /// </summary>
     public CacheType CacheType { get; set; } = CacheType.Memory;
+
+    /// <summary>
+    ///     Save the cache on disk.
+    /// </summary>
+    public bool SaveOnDisk { get; set; } = false;
 }
 
 /// <summary>
