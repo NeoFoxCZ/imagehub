@@ -16,6 +16,7 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddTransient<ImageService>();
+builder.Services.AddTransient<CacheService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddMemoryCache();
 
@@ -48,8 +49,13 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine("📏Applying migrations");
     var db = scope.ServiceProvider.GetRequiredService<MyContext>();
     db.Database.Migrate();
-    Console.WriteLine("✅Database migrations applied");
+    Console.WriteLine("📏Database migrations applied");
 }
+
+Console.WriteLine("🔄Starting cache service");
+var cacheService = app.Services.GetRequiredService<CacheService>();
+await cacheService.CacheRewriteRoutes();
+Console.WriteLine("🔄Ending cache service");
 
 Console.WriteLine("🚀Starting application");
 

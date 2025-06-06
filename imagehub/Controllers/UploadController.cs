@@ -18,6 +18,7 @@ public class UploadController(
     ImageService imageService,
     IMemoryCache cache,
     IWebHostEnvironment env,
+    CacheService cacheService,
     IOptions<CacheSettings> cacheSettings)
     : ControllerBase
 {
@@ -64,70 +65,7 @@ public class UploadController(
     [HttpGet("cache-rewrites")]
     public async Task<IActionResult> CacheRewrites()
     {
-        const string cacheKey = "ImagePathMap";
-        // get folder path conf/rewrites.conf
-        var rewritesPath = Path.Combine(env.ContentRootPath, "conf", "rewrites.conf");
-        
-        // reead the file and save it to the cache
-        // rows are in this format: "/img/article/250/baotian-a-sada-zrcatek-p-p-zavit-m8 /img/article/250/LM0037.jpg;"
-        // SAVE as dictionary to cache, splited by blank with key as the first part and value as the second part
-        // /img/article/250/baotian-a-sada-zrcatek-p-p-zavit-m8  is key
-        // /img/article/250/LM0037.jpg; is value
-        
-        if (!System.IO.File.Exists(rewritesPath))
-        {
-            logger.LogError("Rewrites file not found: {RewritesPath}", rewritesPath);
-            return NotFound("Rewrites file not found.");
-        }
-        
-        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        
-        var lines = await System.IO.File.ReadAllLinesAsync(rewritesPath);
-        foreach (var rawLine in lines)
-        {
-            if (string.IsNullOrWhiteSpace(rawLine))
-                continue;
-
-            // Rozdělíme podle mezery (jen na první výskyt), aby hodnota mohla obsahovat teoreticky další mezery
-            // Ale dle vašeho příkladu stačí split(' ', 2)
-            // odebere všude "/img/"
-            var parts = rawLine.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 2)
-            {
-                // špatně formátovaný řádek, můžeme jen logovat a pokračovat
-                logger.LogWarning("Řádek má neočekávaný formát: {Line}", rawLine);
-                continue;
-            }
-
-            var key = parts[0].Replace("/img/", string.Empty).Trim();
-            var value = parts[1].Replace("/img/", string.Empty).Trim();
-
-            // Hodnota z vašeho příkladu končí středníkem – můžete ho remove, pokud nechcete, aby zůstal ve výsledku:
-            if (value.EndsWith(";"))
-                value = value.Substring(0, value.Length - 1);
-
-            // Přidáme do dictionary (přepsat existující, pokud náhodou duplicitní klíč)
-            map[key] = value;
-        }
-
-        // Uložíme do cache s vlastními parametry (např. expirační doba)
-        var cacheOptions = new MemoryCacheEntryOptions()
-            .SetSlidingExpiration(TimeSpan.FromHours(2)); // cache se obnoví, když je položka přistupována
-
-        // Pokud již existuje v cache, přepíšeme ji a uložíme novou verzi + dumpneme nepotřebnout paměť
-        if (cache.TryGetValue(cacheKey, out _))
-        {
-            logger.LogInformation("Přepisujeme existující cache pro klíč {CacheKey}.", cacheKey);
-            cache.Remove(cacheKey);
-            // Uvolníme paměť, pokud je potřeba
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
-        cache.Set(cacheKey, map, cacheOptions);
-        logger.LogInformation("Mapa načtena ze souboru a uložena do cache ({Count} záznamů).", map.Count);
-
-        return Ok("Mapa přepisů cest k obrázkům byla úspěšně načtena a uložena do cache." +
-                   $" Celkem záznamů: {map.Count}");
+        return await cacheService.CacheRewriteRoutes();
     }
     
     // Catch-all: do parametru id se bude mapovat např. "scooter/250/babetta-classic-50"

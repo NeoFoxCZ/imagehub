@@ -2,6 +2,7 @@
 
 using System.Collections;
 using System.Reflection;
+using imagehub.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -11,7 +12,7 @@ namespace imagehub.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CacheController(ILogger<CacheController> logger, IMemoryCache cache) : ControllerBase
+public class CacheController(ILogger<CacheController> logger, IMemoryCache cache, CacheService cacheService) : ControllerBase
 {
     [HttpGet]
     public IActionResult GetCache()
@@ -19,6 +20,12 @@ public class CacheController(ILogger<CacheController> logger, IMemoryCache cache
         // get all cache items and images
         var cacheData = cache;
         return Ok(cacheData);
+    }
+
+    [HttpGet("rewrites")]
+    public async Task<IActionResult> GetCacheRewrites()
+    {
+        return await cacheService.CacheRewriteRoutes();
     }
 
     [HttpDelete]

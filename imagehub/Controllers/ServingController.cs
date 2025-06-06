@@ -12,6 +12,7 @@ public class ServingController(
     ILogger<UploadController> logger,
     ImageService imageService,
     IMemoryCache cache,
+    CacheService cacheService,
     IWebHostEnvironment env,
     IOptions<CacheSettings> cacheSettings)
     : ControllerBase
@@ -28,9 +29,8 @@ public class ServingController(
         if (!cache.TryGetValue(cacheKey, out Dictionary<string, string> imagePathMap))
         {
             // pokud není v cache, načteme znovu
-            // imagePathMap = await CacheRewrites();
-            logger.LogWarning("Image path map not found in cache, reloading from file.");
-            return NotFound("Neni incializovana cache pro přepisování cest k obrázkům.");
+            await cacheService.CacheRewriteRoutes();
+            logger.LogWarning("Image path map not found in cache, reloading from file, call again please.");
         }
         // Pokud je v mapě, přepíšeme cestu
         if (imagePathMap.TryGetValue(id, out var imagePath))
@@ -43,7 +43,6 @@ public class ServingController(
         var fileName = id;
         if (Path.GetExtension(fileName) == string.Empty)
         {
-            logger.LogInformation("koukám po:" + fileName);
             // Pokud jde o /schemas/ pak rovnou .webp contains
             if (fileName.StartsWith("schemas/"))
             {
