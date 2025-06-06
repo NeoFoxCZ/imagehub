@@ -61,7 +61,8 @@ public class ServingController(
         if (!System.IO.File.Exists(filePath))
         {
             logger.LogWarning("Obrázek nenalezen: {FilePath}", filePath);
-            return NotFound();
+            // vratime obrazek nenalezeno.webp /images/nenalezeno.webp
+            filePath = Path.Combine(wwwRoot, "nenalezeno.webp");
         }
 
         byte[] fileBytes;
