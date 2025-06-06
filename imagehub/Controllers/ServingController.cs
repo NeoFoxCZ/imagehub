@@ -43,6 +43,7 @@ public class ServingController(
         var fileName = id;
         if (Path.GetExtension(fileName) == string.Empty)
         {
+            logger.LogInformation("koukám po:" + fileName);
             // Pokud jde o /schemas/ pak rovnou .webp contains
             if (fileName.Contains("/schemas/"))
             {
@@ -57,7 +58,7 @@ public class ServingController(
         // Složka wwwroot/images/...
         var wwwRoot = $"images/";
         var filePath = Path.Combine(wwwRoot, fileName);
-
+        
         if (!System.IO.File.Exists(filePath))
         {
             logger.LogWarning("Obrázek nenalezen: {FilePath}", filePath);
