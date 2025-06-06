@@ -16,6 +16,7 @@ public class UploadController(
     ILogger<UploadController> logger,
     ImageService imageService,
     IMemoryCache cache,
+    IWebHostEnvironment env,
     IOptions<CacheSettings> cacheSettings)
     : ControllerBase
 {
@@ -57,6 +58,50 @@ public class UploadController(
             logger.LogError(ex, "Error uploading images");
             return StatusCode(500, "Internal server error");
         }
+    }
+    
+    // Catch-all: do parametru id se bude mapovat např. "scooter/250/babetta-classic-50"
+    [HttpGet("new/{*id}")]
+    public async Task<IActionResult> GetImageDisk(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+            return BadRequest("Nebyl zadán žádný název obrázku.");
+
+        // Pokud id neobsahuje příponu, přidáme ".jpg"
+        var fileName = id;
+        if (Path.GetExtension(fileName) == string.Empty)
+        {
+            fileName += ".jpg";
+        }
+
+        // Složka wwwroot/images/...
+        var wwwRoot = $"images/";
+        var filePath = Path.Combine(wwwRoot, fileName);
+
+        if (!System.IO.File.Exists(filePath))
+        {
+            logger.LogWarning("Obrázek nenalezen: {FilePath}", filePath);
+            return NotFound();
+        }
+
+        byte[] fileBytes;
+        try
+        {
+            fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+            if (fileBytes.Length == 0)
+            {
+                logger.LogError("Obrázek je prázdný: {FilePath}", filePath);
+                return NotFound();
+            }
+        }
+        catch (IOException ex)
+        {
+            logger.LogError(ex, "Chyba čtení souboru {FilePath}", filePath);
+            return NotFound();
+        }
+
+        // Mimetype pro JPG
+        return File(fileBytes, "image/jpeg");
     }
     
     [HttpGet("{id}")]
