@@ -5,6 +5,7 @@ using imagehub.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
+using SixLabors.ImageSharp.Formats.Webp;
 
 #endregion
 
@@ -59,13 +60,88 @@ public class UploadController(
             return StatusCode(500, "Internal server error");
         }
     }
+
+    [HttpGet("cache-rewrites")]
+    public async Task<Dictionary<string, string>> CacheRewrites()
+    {
+        const string cacheKey = "ImagePathMap";
+        // get folder path conf/rewrites.conf
+        var rewritesPath = Path.Combine(env.ContentRootPath, "conf", "rewrites.conf");
+        
+        // reead the file and save it to the cache
+        // rows are in this format: "/img/article/250/baotian-a-sada-zrcatek-p-p-zavit-m8 /img/article/250/LM0037.jpg;"
+        // SAVE as dictionary to cache, splited by blank with key as the first part and value as the second part
+        // /img/article/250/baotian-a-sada-zrcatek-p-p-zavit-m8  is key
+        // /img/article/250/LM0037.jpg; is value
+        
+        if (!System.IO.File.Exists(rewritesPath))
+        {
+            logger.LogError("Rewrites file not found: {RewritesPath}", rewritesPath);
+            return new Dictionary<string, string>();
+        }
+        
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        
+        var lines = await System.IO.File.ReadAllLinesAsync(rewritesPath);
+        foreach (var rawLine in lines)
+        {
+            if (string.IsNullOrWhiteSpace(rawLine))
+                continue;
+
+            // Rozdělíme podle mezery (jen na první výskyt), aby hodnota mohla obsahovat teoreticky další mezery
+            // Ale dle vašeho příkladu stačí split(' ', 2)
+            // odebere všude "/img/"
+            var parts = rawLine.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                // špatně formátovaný řádek, můžeme jen logovat a pokračovat
+                logger.LogWarning("Řádek má neočekávaný formát: {Line}", rawLine);
+                continue;
+            }
+
+            var key = parts[0].Replace("/img/", string.Empty).Trim();
+            var value = parts[1].Replace("/img/", string.Empty).Trim();
+
+            // Hodnota z vašeho příkladu končí středníkem – můžete ho remove, pokud nechcete, aby zůstal ve výsledku:
+            if (value.EndsWith(";"))
+                value = value.Substring(0, value.Length - 1);
+
+            // Přidáme do dictionary (přepsat existující, pokud náhodou duplicitní klíč)
+            map[key] = value;
+        }
+
+        // Uložíme do cache s vlastními parametry (např. expirační doba)
+        var cacheOptions = new MemoryCacheEntryOptions()
+            .SetSlidingExpiration(TimeSpan.FromHours(2)); // cache se obnoví, když je položka přistupována
+
+        cache.Set(cacheKey, map, cacheOptions);
+        logger.LogInformation("Mapa načtena ze souboru a uložena do cache ({Count} záznamů).", map.Count);
+
+        return map;
+    }
     
     // Catch-all: do parametru id se bude mapovat např. "scooter/250/babetta-classic-50"
     [HttpGet("new/{*id}")]
     public async Task<IActionResult> GetImageDisk(string id)
     {
+        const string cacheKey = "ImagePathMap";
         if (string.IsNullOrWhiteSpace(id))
             return BadRequest("Nebyl zadán žádný název obrázku.");
+        
+        // read the rewrites from the cache
+        if (!cache.TryGetValue(cacheKey, out Dictionary<string, string> imagePathMap))
+        {
+            // pokud není v cache, načteme znovu
+            // imagePathMap = await CacheRewrites();
+            logger.LogWarning("Image path map not found in cache, reloading from file.");
+            return NotFound("Neni incializovana cache pro přepisování cest k obrázkům.");
+        }
+        // Pokud je v mapě, přepíšeme cestu
+        if (imagePathMap.TryGetValue(id, out var imagePath))
+        {
+            id = imagePath;
+        }
+        
 
         // Pokud id neobsahuje příponu, přidáme ".jpg"
         var fileName = id;
@@ -100,7 +176,6 @@ public class UploadController(
             return NotFound();
         }
 
-        // Mimetype pro JPG
         return File(fileBytes, "image/jpeg");
     }
     
