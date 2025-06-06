@@ -114,6 +114,15 @@ public class UploadController(
         var cacheOptions = new MemoryCacheEntryOptions()
             .SetSlidingExpiration(TimeSpan.FromHours(2)); // cache se obnoví, když je položka přistupována
 
+        // Pokud již existuje v cache, přepíšeme ji a uložíme novou verzi + dumpneme nepotřebnout paměť
+        if (cache.TryGetValue(cacheKey, out _))
+        {
+            logger.LogInformation("Přepisujeme existující cache pro klíč {CacheKey}.", cacheKey);
+            cache.Remove(cacheKey);
+            // Uvolníme paměť, pokud je potřeba
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
         cache.Set(cacheKey, map, cacheOptions);
         logger.LogInformation("Mapa načtena ze souboru a uložena do cache ({Count} záznamů).", map.Count);
 
