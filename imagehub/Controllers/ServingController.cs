@@ -43,7 +43,15 @@ public class ServingController(
         var fileName = id;
         if (Path.GetExtension(fileName) == string.Empty)
         {
-            fileName += ".jpg";
+            // Pokud jde o /rozkresy/ pak rovnou .webp
+            if (fileName.StartsWith("rozkresy/"))
+            {
+                fileName += ".webp";
+            }
+            else
+            {
+                fileName += ".jpg";
+            }
         }
 
         // Složka wwwroot/images/...
