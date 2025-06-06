@@ -18,7 +18,7 @@ public class ServingController(
     : ControllerBase
 {
     // Catch-all: do parametru id se bude mapovat např. "scooter/250/babetta-classic-50"
-    [HttpGet("old/{*id}")]
+    [HttpGet("{*id}")]
     public async Task<IActionResult> GetImageDisk(string id)
     {
         const string cacheKey = "ImagePathMap";
@@ -43,9 +43,11 @@ public class ServingController(
         var fileName = id;
         if (Path.GetExtension(fileName) == string.Empty)
         {
-            // Pokud jde o /schemas/ pak rovnou .webp contains
-            if (fileName.StartsWith("schemas/"))
+            // zjistime jestli obrazek už existuje jako .webp
+            var existsWebp = System.IO.File.Exists(Path.Combine("images", $"{fileName}.webp"));
+            if (existsWebp)
             {
+                // pokud existuje jako .webp, přepíšeme název souboru
                 fileName += ".webp";
             }
             else
@@ -85,7 +87,7 @@ public class ServingController(
         return File(fileBytes, "image/jpeg");
     }
     
-    [HttpGet("{*id}")]
+    [HttpGet("v2/{*id}")]
     public async Task<IActionResult> GetImageDiskV2(string id)
     {
         const string cacheKey = "ImagePathMap";
