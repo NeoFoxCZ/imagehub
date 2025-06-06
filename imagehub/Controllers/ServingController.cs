@@ -72,6 +72,7 @@ public class ServingController(
             return NotFound();
         }
 
+        logger.LogInformation("Obrázek {FileName} úspěšně načten z disku.", fileName);
         return File(fileBytes, "image/jpeg");
     }
 }
