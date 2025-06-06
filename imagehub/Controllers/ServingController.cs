@@ -43,8 +43,8 @@ public class ServingController(
         var fileName = id;
         if (Path.GetExtension(fileName) == string.Empty)
         {
-            // Pokud jde o /rozkresy/ pak rovnou .webp
-            if (fileName.StartsWith("rozkresy/"))
+            // Pokud jde o /schemas/ pak rovnou .webp contains
+            if (fileName.Contains("/schemas/"))
             {
                 fileName += ".webp";
             }
