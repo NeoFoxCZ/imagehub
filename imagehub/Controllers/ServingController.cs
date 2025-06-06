@@ -168,7 +168,8 @@ public class ServingController(
         // convert image to .webp if is .jpg
         
         var fileExtension = Path.GetExtension(fileName).ToLowerInvariant();
-        if (fileExtension == ".jpg" || fileExtension == ".jpeg")
+        // a hlavně pokud to není "nenalezeno.webp"
+        if (fileExtension == ".jpg" || fileExtension == ".jpeg" && !fileName.Equals("nenalezeno.webp", StringComparison.OrdinalIgnoreCase))
         {
             // Convert to webp if jpg
             using var ms = new MemoryStream(fileBytes);
