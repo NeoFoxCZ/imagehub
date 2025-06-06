@@ -18,7 +18,7 @@ public class ServingController(
     : ControllerBase
 {
     // Catch-all: do parametru id se bude mapovat např. "scooter/250/babetta-classic-50"
-    [HttpGet("{*id}")]
+    [HttpGet("old/{*id}")]
     public async Task<IActionResult> GetImageDisk(string id)
     {
         const string cacheKey = "ImagePathMap";
@@ -85,7 +85,7 @@ public class ServingController(
         return File(fileBytes, "image/jpeg");
     }
     
-    [HttpGet("v2/{*id}")]
+    [HttpGet("{*id}")]
     public async Task<IActionResult> GetImageDiskV2(string id)
     {
         const string cacheKey = "ImagePathMap";
