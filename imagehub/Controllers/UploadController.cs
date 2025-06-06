@@ -62,7 +62,7 @@ public class UploadController(
     }
 
     [HttpGet("cache-rewrites")]
-    public async Task<Dictionary<string, string>> CacheRewrites()
+    public async Task<IActionResult> CacheRewrites()
     {
         const string cacheKey = "ImagePathMap";
         // get folder path conf/rewrites.conf
@@ -77,7 +77,7 @@ public class UploadController(
         if (!System.IO.File.Exists(rewritesPath))
         {
             logger.LogError("Rewrites file not found: {RewritesPath}", rewritesPath);
-            return new Dictionary<string, string>();
+            return NotFound("Rewrites file not found.");
         }
         
         var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -117,7 +117,8 @@ public class UploadController(
         cache.Set(cacheKey, map, cacheOptions);
         logger.LogInformation("Mapa načtena ze souboru a uložena do cache ({Count} záznamů).", map.Count);
 
-        return map;
+        return Ok("Mapa přepisů cest k obrázkům byla úspěšně načtena a uložena do cache." +
+                   $" Celkem záznamů: {map.Count}");
     }
     
     // Catch-all: do parametru id se bude mapovat např. "scooter/250/babetta-classic-50"
