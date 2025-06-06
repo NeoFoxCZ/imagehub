@@ -45,7 +45,7 @@ public class ServingController(
         {
             logger.LogInformation("koukám po:" + fileName);
             // Pokud jde o /schemas/ pak rovnou .webp contains
-            if (fileName.Contains("/schemas/"))
+            if (fileName.StartsWith("schemas/"))
             {
                 fileName += ".webp";
             }
