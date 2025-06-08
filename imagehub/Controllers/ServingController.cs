@@ -56,6 +56,8 @@ public class ServingController(
 
         if (!System.IO.File.Exists(filePath))
         {
+            // zalogujeme i přesný request co se volá
+            logger.LogWarning("Obrázek nenalezen s voláním http requestu: {RequestPath}", Request.Path);
             logger.LogWarning("Obrázek nenalezen: {FilePath}", filePath);
             // vratime obrazek nenalezeno.webp /images/nenalezeno.webp
             filePath = Path.Combine(wwwRoot, "nenalezeno.webp");
