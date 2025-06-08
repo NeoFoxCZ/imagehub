@@ -27,6 +27,14 @@ public class CacheController(ILogger<CacheController> logger, IMemoryCache cache
     {
         return await cacheService.CacheRewriteRoutes();
     }
+    
+    [HttpGet("rewrites/{key}")]
+    public IActionResult GetCacheRewriteByKey(string key)
+    {
+        var response =  cacheService.GetCacheRewrites(key);
+        return Ok(response);
+    }
+    
 
     [HttpDelete]
     public IActionResult ClearCache()

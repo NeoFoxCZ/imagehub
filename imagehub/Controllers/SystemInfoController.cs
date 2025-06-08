@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 #endregion
 
@@ -9,7 +10,7 @@ namespace imagehub.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class SystemInfoController : ControllerBase
+public class SystemInfoController(IMemoryCache memoryCache) : ControllerBase
 {
     /// <summary>
     ///     Vrátí JSON s informacemi o paměti procesu a průměrném CPU vytížení od startu.
@@ -39,6 +40,10 @@ public class SystemInfoController : ControllerBase
         var workingSet = process.WorkingSet64; // fyzická paměť (RSS) v bajtech
         var privateBytes = process.PrivateMemorySize64; // soukromé bajty (Private Bytes)
         var gcTotalMemory = GC.GetTotalMemory(false); // GC heap
+        
+        var cachedRoutes = memoryCache.TryGetValue(Const.CacheMapStatisticsKey, out int cacheStats)
+            ? cacheStats
+            : 0;
 
         // Sestavíme anonymní objekt pro serializaci do JSON
         var info = new
@@ -65,6 +70,10 @@ public class SystemInfoController : ControllerBase
                 TotalCpuTime = totalCpuTime, // TimeSpan
                 Environment.ProcessorCount,
                 AverageCpuUsagePercent = Math.Round(cpuUsage, 2)
+            },
+            ImageService = new
+            {
+                CachedRoutes = cachedRoutes
             },
             Timestamp = DateTime.UtcNow
         };
